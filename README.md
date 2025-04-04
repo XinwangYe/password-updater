@@ -23,7 +23,7 @@ accounts:
 ```yaml
 # email.yml
 email:
-  port: 25
+  port: 'port'
   server: 'smtp server'
   sender_name: 'your name'
   sender_email: 'your email'

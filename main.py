@@ -5,10 +5,10 @@ from typing import TextIO, cast
 
 import pyperclip
 
+from capture_input_output import TeeOutput, TeeInput, redirect_stdin
 from emails import Email
 from password_generator import generate_win_password
 from password_updater import update_password
-from capture_input_output import TeeOutput, TeeInput, redirect_stdin
 from yaml import load_yaml, dump_yaml, dump_to_stream
 
 
@@ -104,7 +104,7 @@ def send_email_report(domains=None):
 def main():
     parser = argparse.ArgumentParser(description='Password Updater.')
     parser.add_argument('--send-email', action='store_true', help='Send email report')
-    parser.add_argument('--domains', nargs='+', help='List of domain to update passwords for')
+    parser.add_argument('--domains', nargs='+', metavar='DOMAIN', help='List of domain to update passwords for')
     args = parser.parse_args()
 
     if args.send_email:
