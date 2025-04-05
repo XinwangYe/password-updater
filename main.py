@@ -29,24 +29,20 @@ def update_password_for_account(account):
 
 
 def process_domain_update(target_domain):
-    if not target_domain:
-        print("No domain provided. Skipping password updates.")
-        return
+    password_updated = False
 
     accounts = load_yaml('accounts.yml')
-    updated = False
-
     for account in accounts['accounts']:
         if account['domain'] == target_domain:
             print(f"Updating password for {account['username']} on {account['domain']}...")
             error = update_password_for_account(account)
             if not error:
                 print("Password updated successfully")
-                updated = True
+                password_updated = True
             else:
                 print(f"Failed to update password: {error}")
 
-    if updated:
+    if password_updated:
         dump_yaml(accounts, 'accounts.yml')
         print("Changes saved to accounts file")
 
@@ -72,20 +68,23 @@ def interactive_mode():
             print("Please enter a valid number.")
 
 
-def send_email_report(domains=None):
+def perform_updates(domains=None):
+    if domains:
+        for domain in domains:
+            process_domain_update(domain)
+        return True
+    else:
+        return interactive_mode()
+
+
+def perform_updates_and_capture_output(domains=None):
     buffer = StringIO()
     with redirect_stdout(cast(TextIO, TeeOutput(buffer))), redirect_stdin(TeeInput(buffer)):
-        if domains:
-            for domain in domains:
-                process_domain_update(domain)
-            should_send = True
-        else:
-            should_send = interactive_mode()
+        updates_performed = perform_updates(domains)
+    return updates_performed, buffer.getvalue()
 
-    if not should_send:
-        print("No changes made. No email will be sent.")
-        return
 
+def send_email_report(output):
     email_config = load_yaml('email.yml')['email']
     email = Email(
         port=email_config['port'],
@@ -97,7 +96,7 @@ def send_email_report(domains=None):
     )
 
     dump_to_stream(load_yaml('accounts.yml'), stream := StringIO())
-    report = f"Report:\n{buffer.getvalue()}\n\nAccounts updated:\n{stream.getvalue()}"
+    report = f"Report:\n{output}\n\nAccounts updated:\n{stream.getvalue()}"
     email.send_email(subject="Password Update Report", content=report)
 
 
@@ -107,14 +106,12 @@ def main():
     parser.add_argument('--domains', nargs='+', metavar='DOMAIN', help='List of domain to update passwords for')
     args = parser.parse_args()
 
+    updates_performed, output = perform_updates_and_capture_output(args.domains)
     if args.send_email:
-        send_email_report(args.domains)
-    else:
-        if args.domains:
-            for domain in args.domains:
-                process_domain_update(domain)
+        if updates_performed:
+            send_email_report(output)
         else:
-            interactive_mode()
+            print("No updates performed, no email sent.")
 
 
 if __name__ == '__main__':
