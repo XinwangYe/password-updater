@@ -102,8 +102,8 @@ def send_email_report(output):
 
 def main():
     parser = argparse.ArgumentParser(description='Password Updater.')
-    parser.add_argument('--send-email', action='store_true', help='Send email report')
-    parser.add_argument('--domains', nargs='+', metavar='DOMAIN', help='List of domain to update passwords for')
+    parser.add_argument('-se', '--send-email', action='store_true', help='send email report')
+    parser.add_argument('-d', '--domains', nargs='+', metavar='DOMAIN', help='list of domain to update passwords for')
     args = parser.parse_args()
 
     updates_performed, output = perform_updates_and_capture_output(args.domains)
