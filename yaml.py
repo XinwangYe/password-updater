@@ -18,5 +18,6 @@ def dump_yaml(data, filename):
     with open(path, 'w') as f:
         yaml.dump(data, f)
 
+
 def dump_to_stream(data, stream):
     return yaml.dump(data, stream)
